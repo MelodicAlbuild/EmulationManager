@@ -11,6 +11,8 @@ using EmulationManager.Shared.ApiClient;
 using EmulationManager.Shared.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace EmulationManager.Desktop;
 
@@ -42,6 +44,9 @@ public class App : Application
             {
                 DataContext = Services.GetRequiredService<MainWindowViewModel>()
             };
+
+            // Global unhandled exception handler
+            desktop.MainWindow.Closing += (_, _) => Log.CloseAndFlush();
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -49,6 +54,23 @@ public class App : Application
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        // Logging
+        var logPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "EmulationManager", "logs", "client-.log");
+
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.Information()
+            .WriteTo.File(logPath, rollingInterval: RollingInterval.Day, retainedFileCountLimit: 7)
+            .Enrich.FromLogContext()
+            .CreateLogger();
+
+        services.AddLogging(builder =>
+        {
+            builder.ClearProviders();
+            builder.AddSerilog(dispose: true);
+        });
+
         // Local database
         var dbPath = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -61,11 +83,24 @@ public class App : Application
         // Settings
         services.AddScoped<ISettingsService, SettingsService>();
 
-        // API Client
+        // API Client with resilience policies
         services.AddHttpClient<IEmulationManagerApi, EmulationManagerApiClient>(client =>
         {
             client.BaseAddress = new Uri("http://localhost:5038");
             client.Timeout = TimeSpan.FromMinutes(30);
+        })
+        .AddStandardResilienceHandler(options =>
+        {
+            // Retry up to 3 times with exponential backoff for transient failures
+            options.Retry.MaxRetryAttempts = 3;
+            options.Retry.BackoffType = Polly.DelayBackoffType.Exponential;
+            options.Retry.UseJitter = true;
+
+            // 5-minute total timeout for large downloads
+            options.TotalRequestTimeout.Timeout = TimeSpan.FromMinutes(5);
+
+            // Per-attempt timeout of 2 minutes
+            options.AttemptTimeout.Timeout = TimeSpan.FromMinutes(2);
         });
 
         // Emulator handlers

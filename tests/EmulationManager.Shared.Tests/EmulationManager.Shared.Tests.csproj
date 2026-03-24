@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\EmulationManager.Shared\EmulationManager.Shared.csproj" />
+    <ProjectReference Include="..\..\src\EmulationManager.Desktop\EmulationManager.Desktop.csproj" />
   </ItemGroup>
 
 </Project>

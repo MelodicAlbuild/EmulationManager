@@ -1,18 +1,22 @@
 using EmulationManager.Server.Services;
 using EmulationManager.Shared.Enums;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EmulationManager.Server.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[EnableRateLimiting("downloads")]
 public class DownloadsController : ControllerBase
 {
     private readonly IFileProxyService _fileProxy;
+    private readonly ILogger<DownloadsController> _logger;
 
-    public DownloadsController(IFileProxyService fileProxy)
+    public DownloadsController(IFileProxyService fileProxy, ILogger<DownloadsController> logger)
     {
         _fileProxy = fileProxy;
+        _logger = logger;
     }
 
     [HttpGet("{type}/{id:int}")]
@@ -23,7 +27,13 @@ public class DownloadsController : ControllerBase
             return NotFound();
 
         if (!System.IO.File.Exists(fileInfo.PhysicalPath))
+        {
+            _logger.LogWarning("File not found on storage: {FileName} at {Path}", fileInfo.FileName, fileInfo.PhysicalPath);
             return NotFound(new { error = "File not found on storage", path = fileInfo.FileName });
+        }
+
+        _logger.LogInformation("Serving download: {Type}/{Id} ({FileName}, {Size} bytes)",
+            type, id, fileInfo.FileName, fileInfo.FileSize);
 
         return PhysicalFile(
             fileInfo.PhysicalPath,

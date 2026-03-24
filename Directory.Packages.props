@@ -7,6 +7,7 @@
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.3" />
 
     <!-- MVVM -->
     <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
@@ -21,6 +22,18 @@
     <!-- DI -->
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
     <PackageVersion Include="Microsoft.Extensions.Http" Version="9.0.3" />
+
+    <!-- Logging -->
+    <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
+    <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />
+    <PackageVersion Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageVersion Include="Serilog" Version="4.2.0" />
+    <PackageVersion Include="Serilog.Extensions.Logging" Version="9.0.0" />
+
+    <!-- Resilience -->
+    <PackageVersion Include="Microsoft.Extensions.Http.Resilience" Version="9.3.0" />
+
+    <!-- Rate limiting (built into ASP.NET Core 9, no extra package needed) -->
 
     <!-- Auto-update -->
     <PackageVersion Include="Velopack" Version="0.0.1251" />

@@ -2,12 +2,12 @@
 @inject IGameService GameService
 @rendermode InteractiveServer
 
-<PageTitle>Game Library - Grimoire</PageTitle>
+<PageTitle>The Tome - Grimoire</PageTitle>
 
 <div class="library-header">
-    <h2>Game Library</h2>
+    <h2>The Tome</h2>
     <div class="library-controls">
-        <input type="text" class="form-control search-box" placeholder="Search games..."
+        <input type="text" class="form-control search-box" placeholder="Search the archives..."
                @bind="searchText" @bind:event="oninput" @bind:after="OnSearchChanged" />
     </div>
 </div>
@@ -20,18 +20,18 @@
     {
         <button class="tab @(selectedPlatform == platform.Type ? "active" : "")"
                 @onclick="() => FilterByPlatform(platform.Type)">
-            @platform.DisplayName (@platform.GameCount)
+            @FormatTabLabel(platform.Type) (@platform.GameCount)
         </button>
     }
 </div>
 
 @if (games is null)
 {
-    <p class="loading">Loading games...</p>
+    <p class="loading">Consulting the archives...</p>
 }
 else if (games.Count == 0)
 {
-    <p class="empty-state">No games found.</p>
+    <p class="empty-state">No spells found in this section of the tome.</p>
 }
 else
 {
@@ -73,4 +73,12 @@ else
     {
         await LoadGames();
     }
+
+    private static string FormatTabLabel(PlatformType platform) => platform switch
+    {
+        PlatformType.NintendoSwitch => "Switch",
+        PlatformType.NintendoDS => "DS",
+        PlatformType.Nintendo3DS => "3DS",
+        _ => platform.ToString()
+    };
 }

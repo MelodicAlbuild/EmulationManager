@@ -63,15 +63,25 @@ public class GameService : IGameService
 
     public async Task<IReadOnlyList<PlatformInfoDto>> GetPlatformStatsAsync()
     {
-        return await _db.Games
+        var stats = await _db.Games
             .GroupBy(g => g.Platform)
-            .Select(g => new PlatformInfoDto(
-                g.Key,
-                g.Key.ToString(),
-                g.Count()
-            ))
+            .Select(g => new { Platform = g.Key, Count = g.Count() })
             .ToListAsync();
+
+        return stats.Select(s => new PlatformInfoDto(
+            s.Platform,
+            FormatPlatformName(s.Platform),
+            s.Count
+        )).ToList();
     }
+
+    private static string FormatPlatformName(PlatformType platform) => platform switch
+    {
+        PlatformType.NintendoSwitch => "Nintendo Switch",
+        PlatformType.NintendoDS => "Nintendo DS",
+        PlatformType.Nintendo3DS => "Nintendo 3DS",
+        _ => platform.ToString()
+    };
 
     public async Task<IReadOnlyList<EmulatorDto>> GetEmulatorsAsync()
     {

@@ -1,0 +1,76 @@
+@page "/games"
+@inject IGameService GameService
+@rendermode InteractiveServer
+
+<PageTitle>Game Library - Grimoire</PageTitle>
+
+<div class="library-header">
+    <h2>Game Library</h2>
+    <div class="library-controls">
+        <input type="text" class="form-control search-box" placeholder="Search games..."
+               @bind="searchText" @bind:event="oninput" @bind:after="OnSearchChanged" />
+    </div>
+</div>
+
+<div class="platform-tabs">
+    <button class="tab @(selectedPlatform is null ? "active" : "")" @onclick="() => FilterByPlatform(null)">
+        All (@totalCount)
+    </button>
+    @foreach (var platform in platforms)
+    {
+        <button class="tab @(selectedPlatform == platform.Type ? "active" : "")"
+                @onclick="() => FilterByPlatform(platform.Type)">
+            @platform.DisplayName (@platform.GameCount)
+        </button>
+    }
+</div>
+
+@if (games is null)
+{
+    <p class="loading">Loading games...</p>
+}
+else if (games.Count == 0)
+{
+    <p class="empty-state">No games found.</p>
+}
+else
+{
+    <div class="game-grid">
+        @foreach (var game in games)
+        {
+            <GameCard Game="game" />
+        }
+    </div>
+}
+
+@code {
+    private IReadOnlyList<GameListDto>? games;
+    private IReadOnlyList<PlatformInfoDto> platforms = [];
+    private PlatformType? selectedPlatform;
+    private string searchText = "";
+    private int totalCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        platforms = await GameService.GetPlatformStatsAsync();
+        totalCount = await GameService.GetGameCountAsync();
+        await LoadGames();
+    }
+
+    private async Task LoadGames()
+    {
+        games = await GameService.GetGamesAsync(selectedPlatform,
+            string.IsNullOrWhiteSpace(searchText) ? null : searchText);
+    }
+
+    private async Task FilterByPlatform(PlatformType? platform)
+    {
+        selectedPlatform = platform;
+        await LoadGames();
+    }
+
+    private async Task OnSearchChanged()
+    {
+        await LoadGames();
+    }
+}

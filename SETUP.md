@@ -1,4 +1,4 @@
-# EmulationManager Setup Guide
+# Grimoire Setup Guide
 
 ## Prerequisites
 
@@ -50,7 +50,7 @@ The paths can be on a local disk, a network share, or anywhere accessible from y
 
 ### 1.2 Configure the Server
 
-Edit `src/EmulationManager.Server/appsettings.json`:
+Edit `src/Grimoire.Server/appsettings.json`:
 
 ```json
 {
@@ -62,7 +62,7 @@ Edit `src/EmulationManager.Server/appsettings.json`:
   },
   "AllowedHosts": "*",
   "ConnectionStrings": {
-    "DefaultConnection": "Data Source=emulationmanager.db"
+    "DefaultConnection": "Data Source=grimoire.db"
   },
   "Storage": {
     "GamesBasePath": "/mnt/storage/emulation/games",
@@ -93,11 +93,11 @@ File paths stored in the database for DLCs, updates, etc. are **relative to thei
 
 ### 1.3 Configure the Listen URL
 
-By default the server listens on `http://localhost:5038`. To make it accessible on your network, edit `src/EmulationManager.Server/Properties/launchSettings.json` or set the URL at runtime:
+By default the server listens on `http://localhost:5038`. To make it accessible on your network, edit `src/Grimoire.Server/Properties/launchSettings.json` or set the URL at runtime:
 
 ```bash
 # Listen on all interfaces, port 5038
-dotnet run --project src/EmulationManager.Server --urls "http://0.0.0.0:5038"
+dotnet run --project src/Grimoire.Server --urls "http://0.0.0.0:5038"
 ```
 
 For your cloud proxy setup, point the proxy to this port on the Tailscale IP of the machine running the server.
@@ -105,12 +105,12 @@ For your cloud proxy setup, point the proxy to this port on the Tailscale IP of 
 ### 1.4 Start the Server
 
 ```bash
-cd EmulationManager
-dotnet run --project src/EmulationManager.Server
+cd Grimoire
+dotnet run --project src/Grimoire.Server
 ```
 
 On first start, the server will:
-1. Create the SQLite database (`emulationmanager.db`) and apply migrations
+1. Create the SQLite database (`grimoire.db`) and apply migrations
 2. Seed sample game data (only on a fresh DB -- you'll want to clear this later)
 3. Run the library scanner to auto-import games from `GamesBasePath`
 4. Start listening for connections
@@ -127,7 +127,7 @@ Verify it's working:
 
 **Manual management:** Navigate to `http://localhost:5038/admin/games` to add, edit, or delete games. Use this to fix titles, add descriptions, or set file paths for DLC/updates.
 
-**Removing seed data:** The seed data only loads on an empty database. To start fresh, stop the server, delete `src/EmulationManager.Server/emulationmanager.db`, and restart. If your `GamesBasePath` is configured, the scanner will import your real games instead.
+**Removing seed data:** The seed data only loads on an empty database. To start fresh, stop the server, delete `src/Grimoire.Server/grimoire.db`, and restart. If your `GamesBasePath` is configured, the scanner will import your real games instead.
 
 ### 1.6 Running in Production
 
@@ -135,25 +135,25 @@ For a persistent deployment (e.g., on your cloud proxy):
 
 ```bash
 # Build a self-contained release
-dotnet publish src/EmulationManager.Server -c Release -o publish/server
+dotnet publish src/Grimoire.Server -c Release -o publish/server
 
 # Run it
 cd publish/server
-./EmulationManager.Server --urls "http://0.0.0.0:5038"
+./Grimoire.Server --urls "http://0.0.0.0:5038"
 ```
 
 Or use a systemd service (Linux):
 
 ```ini
 [Unit]
-Description=EmulationManager Server
+Description=Grimoire Server
 After=network.target
 
 [Service]
-WorkingDirectory=/opt/emulationmanager
-ExecStart=/opt/emulationmanager/EmulationManager.Server --urls http://0.0.0.0:5038
+WorkingDirectory=/opt/grimoire
+ExecStart=/opt/grimoire/Grimoire.Server --urls http://0.0.0.0:5038
 Restart=always
-User=emumgr
+User=grimoire
 
 [Install]
 WantedBy=multi-user.target
@@ -170,13 +170,13 @@ The desktop client runs on your friends' PCs (and yours). It connects to the ser
 ### 2.1 Running from Source (Development)
 
 ```bash
-cd EmulationManager
-dotnet run --project src/EmulationManager.Desktop
+cd Grimoire
+dotnet run --project src/Grimoire.Desktop
 ```
 
 The client will:
-1. Create a local SQLite database at `%LocalAppData%/EmulationManager/local.db` (Windows) or `~/.local/share/EmulationManager/local.db` (Linux)
-2. Register the `emumgr://` protocol handler on first run
+1. Create a local SQLite database at `%LocalAppData%/Grimoire/local.db` (Windows) or `~/.local/share/Grimoire/local.db` (Linux)
+2. Register the `grimoire://` protocol handler on first run
 3. Show the main window with a game library (empty until connected to server)
 
 ### 2.2 Configure the Server Connection
@@ -184,7 +184,7 @@ The client will:
 1. Open the desktop client
 2. Click **Settings** in the sidebar
 3. Set **Server URL** to your server's address (e.g., `http://your-server:5038`)
-4. Set **Install Directory** to where you want emulators and games stored locally (defaults to `%LocalAppData%/EmulationManager`)
+4. Set **Install Directory** to where you want emulators and games stored locally (defaults to `%LocalAppData%/Grimoire`)
 5. Click **Save Settings**
 6. Go back to **Game Library** -- it should now load games from the server
 
@@ -196,13 +196,13 @@ Build platform-specific executables:
 
 ```bash
 # Windows
-dotnet publish src/EmulationManager.Desktop -c Release -r win-x64 --self-contained -o publish/win-x64
+dotnet publish src/Grimoire.Desktop -c Release -r win-x64 --self-contained -o publish/win-x64
 
 # Linux
-dotnet publish src/EmulationManager.Desktop -c Release -r linux-x64 --self-contained -o publish/linux-x64
+dotnet publish src/Grimoire.Desktop -c Release -r linux-x64 --self-contained -o publish/linux-x64
 
 # macOS (Apple Silicon)
-dotnet publish src/EmulationManager.Desktop -c Release -r osx-arm64 --self-contained -o publish/osx-arm64
+dotnet publish src/Grimoire.Desktop -c Release -r osx-arm64 --self-contained -o publish/osx-arm64
 ```
 
 These produce self-contained executables that don't need .NET installed. Zip and share with friends.
@@ -212,7 +212,7 @@ These produce self-contained executables that don't need .NET installed. Zip and
 If you push to a GitHub repo, the included CI/CD workflows handle this:
 
 1. Push your code to GitHub
-2. Update `githubRepo` in `src/EmulationManager.Server/Components/Pages/ClientDownload.razor` (line 62) to your actual repo (e.g., `myuser/EmulationManager`)
+2. Update `githubRepo` in `src/Grimoire.Server/Components/Pages/ClientDownload.razor` (line 62) to your actual repo (e.g., `myuser/Grimoire`)
 3. Tag a release: `git tag v1.0.0 && git push --tags`
 4. GitHub Actions builds for all 3 platforms and creates a release
 5. Friends can download from `http://your-server:5038/download-client`
@@ -226,7 +226,7 @@ If you push to a GitHub repo, the included CI/CD workflows handle this:
 1. Friend opens `http://your-server:5038/games` in their browser
 2. Clicks on a game to see its details
 3. Clicks the **Play** button
-4. Browser opens an `emumgr://launch/{gameId}` link
+4. Browser opens an `grimoire://launch/{gameId}` link
 5. The desktop client catches this (registered as protocol handler)
 6. Client checks if the emulator is installed -- if not, prompts to install
 7. Client checks if the game is downloaded locally -- if not, downloads from server
@@ -281,7 +281,7 @@ Each platform has specific requirements that must be satisfied before games will
 
 ### Client-side (friend's PC)
 ```
-%LocalAppData%/EmulationManager/
+%LocalAppData%/Grimoire/
 ├── local.db                  <- installed emulators, downloaded games, settings
 ├── logs/
 │   └── client-2026-03-24.log
@@ -318,16 +318,16 @@ Download `type` values: `Game`, `Dlc`, `Update`, `Emulator`, `Firmware`, `Bios`
 
 ## Troubleshooting
 
-**Server won't start / migration error**: Delete `emulationmanager.db` and restart. The DB will be recreated.
+**Server won't start / migration error**: Delete `grimoire.db` and restart. The DB will be recreated.
 
 **Client can't connect**: Check the Server URL in Settings. Make sure the server is running and accessible (try `curl http://your-server:5038/api/games`).
 
 **Games not showing up after adding files**: The library scanner only runs on startup. Restart the server to pick up new files.
 
-**Protocol handler not working (emumgr:// links)**: The handler registers on first run. If it didn't register, run the client once normally, then try the link again. On Linux, verify `~/.local/share/applications/emumgr.desktop` exists.
+**Protocol handler not working (grimoire:// links)**: The handler registers on first run. If it didn't register, run the client once normally, then try the link again. On Linux, verify `~/.local/share/applications/grimoire.desktop` exists.
 
-**Emulator not found**: The handlers search common installation paths. If your emulator is installed elsewhere, you'll need to add its path to the handler's search paths (in `src/EmulationManager.Emulators/Handlers/`).
+**Emulator not found**: The handlers search common installation paths. If your emulator is installed elsewhere, you'll need to add its path to the handler's search paths (in `src/Grimoire.Emulators/Handlers/`).
 
 **Rate limited**: Download endpoints allow 5 requests per 10 seconds. If you're hitting limits during testing, adjust in `Program.cs`.
 
-**Logs**: Server logs are in `logs/server-*.log` relative to the server working directory. Client logs are in `%LocalAppData%/EmulationManager/logs/`.
+**Logs**: Server logs are in `logs/server-*.log` relative to the server working directory. Client logs are in `%LocalAppData%/Grimoire/logs/`.

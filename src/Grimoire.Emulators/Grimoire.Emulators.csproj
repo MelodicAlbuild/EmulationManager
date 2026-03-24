@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Grimoire.Emulators</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Grimoire.Shared\Grimoire.Shared.csproj" />
+  </ItemGroup>
+
+</Project>

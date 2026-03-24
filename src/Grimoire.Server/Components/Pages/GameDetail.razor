@@ -1,0 +1,106 @@
+@page "/games/{Id:int}"
+@inject IGameService GameService
+@rendermode InteractiveServer
+
+@if (game is null)
+{
+    <PageTitle>Loading... - Grimoire</PageTitle>
+    <p class="loading">Loading game details...</p>
+}
+else
+{
+    <PageTitle>@game.Title - Grimoire</PageTitle>
+
+    <div class="game-detail">
+        <div class="game-detail-header">
+            <div class="game-detail-cover">
+                @if (!string.IsNullOrEmpty(game.CoverImageUrl))
+                {
+                    <img src="@game.CoverImageUrl" alt="@game.Title" />
+                }
+                else
+                {
+                    <div class="game-card-placeholder large">
+                        <span>@game.Title[0]</span>
+                    </div>
+                }
+            </div>
+            <div class="game-detail-info">
+                <h2>@game.Title</h2>
+                <PlatformBadge Platform="game.Platform" />
+
+                @if (!string.IsNullOrEmpty(game.Description))
+                {
+                    <p class="game-description">@game.Description</p>
+                }
+
+                <div class="game-meta">
+                    <span class="meta-item">Size: @FormatFileSize(game.FileSize)</span>
+                </div>
+
+                <div class="game-actions">
+                    <a href="grimoire://launch/@game.Id" class="btn btn-play">Play</a>
+                </div>
+            </div>
+        </div>
+
+        @if (game.Dlcs.Count > 0)
+        {
+            <div class="game-section">
+                <h4>DLC (@game.Dlcs.Count)</h4>
+                <div class="content-list">
+                    @foreach (var dlc in game.Dlcs)
+                    {
+                        <div class="content-item">
+                            <span class="content-title">@dlc.Title</span>
+                            <span class="content-size">@FormatFileSize(dlc.FileSize)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        @if (game.Updates.Count > 0)
+        {
+            <div class="game-section">
+                <h4>Updates (@game.Updates.Count)</h4>
+                <div class="content-list">
+                    @foreach (var update in game.Updates)
+                    {
+                        <div class="content-item">
+                            <span class="content-title">@update.Title (v@update.Version)</span>
+                            <span class="content-size">@FormatFileSize(update.FileSize)</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="back-link">
+            <a href="games">Back to Library</a>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private GameDetailDto? game;
+
+    protected override async Task OnInitializedAsync()
+    {
+        game = await GameService.GetGameDetailAsync(Id);
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        return bytes switch
+        {
+            >= 1_000_000_000 => $"{bytes / 1_000_000_000.0:F1} GB",
+            >= 1_000_000 => $"{bytes / 1_000_000.0:F1} MB",
+            >= 1_000 => $"{bytes / 1_000.0:F1} KB",
+            _ => $"{bytes} B"
+        };
+    }
+}

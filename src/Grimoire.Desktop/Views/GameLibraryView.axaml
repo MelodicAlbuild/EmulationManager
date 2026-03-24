@@ -1,0 +1,100 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Grimoire.Desktop.ViewModels"
+             x:Class="Grimoire.Desktop.Views.GameLibraryView"
+             x:DataType="vm:GameLibraryViewModel">
+
+    <DockPanel>
+        <!-- Header -->
+        <DockPanel DockPanel.Dock="Top" Margin="0,0,0,16">
+            <TextBlock Text="Game Library" FontSize="24" FontWeight="Bold"
+                       Foreground="#e8e8ef" VerticalAlignment="Center" />
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <TextBox Text="{Binding SearchText}" Watermark="Search games..."
+                         Width="250" Classes="search-input" />
+                <Button Content="Search" Command="{Binding LoadGamesCommand}" Classes="accent-btn" />
+                <Button Content="Refresh" Command="{Binding LoadGamesCommand}" Classes="outline-btn" />
+            </StackPanel>
+        </DockPanel>
+
+        <!-- Platform Filter -->
+        <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="8" Margin="0,0,0,16">
+            <Button Content="All" Command="{Binding FilterPlatformCommand}" CommandParameter="{x:Null}" Classes="filter-btn" />
+            <Button Content="Switch" Command="{Binding FilterPlatformCommand}" CommandParameter="NintendoSwitch" Classes="filter-btn" />
+            <Button Content="DS" Command="{Binding FilterPlatformCommand}" CommandParameter="NintendoDS" Classes="filter-btn" />
+            <Button Content="3DS" Command="{Binding FilterPlatformCommand}" CommandParameter="Nintendo3DS" Classes="filter-btn" />
+        </StackPanel>
+
+        <!-- Error Message -->
+        <Border DockPanel.Dock="Top" IsVisible="{Binding ErrorMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}"
+                Background="#3d1c1c" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+            <TextBlock Text="{Binding ErrorMessage}" Foreground="#ff6b6b" TextWrapping="Wrap" />
+        </Border>
+
+        <!-- Loading -->
+        <TextBlock DockPanel.Dock="Top" Text="Loading games..." Foreground="#9898a8"
+                   IsVisible="{Binding IsLoading}" Margin="0,20" HorizontalAlignment="Center" />
+
+        <!-- Game Detail Overlay -->
+        <Border DockPanel.Dock="Top" IsVisible="{Binding ShowDetail}"
+                Background="#22222e" CornerRadius="8" Padding="20" Margin="0,0,0,16"
+                BorderBrush="#2a2a3a" BorderThickness="1">
+            <DockPanel>
+                <Button DockPanel.Dock="Top" Content="Back to Library"
+                        Command="{Binding CloseDetailCommand}"
+                        Classes="outline-btn" HorizontalAlignment="Left" Margin="0,0,0,12" />
+                <StackPanel IsVisible="{Binding GameDetail, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="8">
+                    <TextBlock Text="{Binding GameDetail.Title}" FontSize="22" FontWeight="Bold" Foreground="#e8e8ef" />
+                    <TextBlock Text="{Binding GameDetail.Description}" Foreground="#9898a8" TextWrapping="Wrap" />
+                    <TextBlock Foreground="#9898a8">
+                        <Run Text="Platform: " /><Run Text="{Binding GameDetail.Platform}" Foreground="#6c5ce7" />
+                    </TextBlock>
+                    <TextBlock Foreground="#9898a8">
+                        <Run Text="DLC: " /><Run Text="{Binding GameDetail.Dlcs.Count}" />
+                        <Run Text=" | Updates: " /><Run Text="{Binding GameDetail.Updates.Count}" />
+                    </TextBlock>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- Game List -->
+        <ScrollViewer>
+            <ItemsControl ItemsSource="{Binding Games}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Classes="game-card-btn" Margin="6"
+                                Command="{Binding $parent[ItemsControl].((vm:GameLibraryViewModel)DataContext).ViewGameDetailCommand}"
+                                CommandParameter="{Binding}">
+                            <Border Width="200" CornerRadius="6" ClipToBounds="True"
+                                    Background="#22222e" BorderBrush="#2a2a3a" BorderThickness="1">
+                                <StackPanel>
+                                    <!-- Placeholder cover -->
+                                    <Border Height="120" Background="#1a1a24">
+                                        <TextBlock Text="{Binding Title[0]}" FontSize="40" FontWeight="Bold"
+                                                   Foreground="#6c5ce7" Opacity="0.5"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Margin="10,8">
+                                        <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"
+                                                   Foreground="#e8e8ef" TextTrimming="CharacterEllipsis" MaxLines="1" />
+                                        <StackPanel Orientation="Horizontal" Spacing="4" Margin="0,4,0,0">
+                                            <Border CornerRadius="3" Padding="4,1" Background="#6c5ce7">
+                                                <TextBlock Text="{Binding Platform}" FontSize="10"
+                                                           Foreground="White" />
+                                            </Border>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Button>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

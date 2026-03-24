@@ -8,26 +8,29 @@
         Width="1200" Height="800"
         MinWidth="900" MinHeight="600"
         WindowStartupLocation="CenterScreen"
-        Background="#0f0f14">
+        Background="#08070c">
 
     <Window.Styles>
         <StyleInclude Source="/Assets/Styles.axaml" />
     </Window.Styles>
 
-    <Grid ColumnDefinitions="220,*">
+    <Grid ColumnDefinitions="240,*">
         <!-- Sidebar -->
-        <Border Grid.Column="0" Background="#1a1a24" BorderBrush="#2a2a3a" BorderThickness="0,0,1,0">
+        <Border Grid.Column="0" Background="#0e0d15" BorderBrush="#2a2840" BorderThickness="0,0,1,0">
             <DockPanel>
                 <!-- App Title -->
-                <TextBlock DockPanel.Dock="Top" Text="Grimoire"
-                           FontSize="18" FontWeight="Bold" Foreground="#e8e8ef"
-                           Margin="20,20,20,30" />
+                <Border DockPanel.Dock="Top" Padding="24,24,24,32">
+                    <TextBlock Text="Grimoire"
+                               FontSize="22" FontWeight="Bold" Foreground="#d4af37"
+                               FontFamily="Palatino Linotype, Georgia, serif"
+                               LetterSpacing="3" />
+                </Border>
 
                 <!-- Nav Items -->
-                <StackPanel Spacing="4" Margin="8,0">
+                <StackPanel Spacing="2" Margin="10,0">
                     <Button Command="{Binding NavigateToLibraryCommand}"
                             Classes="nav-btn" Classes.active="{Binding SelectedNavIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=0}">
-                        Game Library
+                        The Tome
                     </Button>
                     <Button Command="{Binding NavigateToDownloadsCommand}"
                             Classes="nav-btn" Classes.active="{Binding SelectedNavIndex, Converter={x:Static ObjectConverters.Equal}, ConverterParameter=1}">
@@ -42,7 +45,7 @@
         </Border>
 
         <!-- Content Area -->
-        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" Margin="24,20">
+        <ContentControl Grid.Column="1" Content="{Binding CurrentPage}" Margin="28,24">
             <ContentControl.DataTemplates>
                 <DataTemplate DataType="vm:GameLibraryViewModel">
                     <views:GameLibraryView />

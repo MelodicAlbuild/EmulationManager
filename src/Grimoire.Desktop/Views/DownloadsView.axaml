@@ -6,38 +6,59 @@
              x:DataType="vm:DownloadsViewModel">
 
     <DockPanel>
-        <TextBlock DockPanel.Dock="Top" Text="Downloads" FontSize="24" FontWeight="Bold"
-                   Foreground="#e8e8ef" Margin="0,0,0,16" />
+        <TextBlock DockPanel.Dock="Top" Text="Downloads" FontSize="26" FontWeight="Bold"
+                   Foreground="#d4af37" Margin="0,0,0,18"
+                   FontFamily="Palatino Linotype, Georgia, serif" LetterSpacing="1" />
+
+        <TextBlock DockPanel.Dock="Top" Text="No active downloads."
+                   Foreground="#5c564e" FontStyle="Italic" Margin="0,20"
+                   HorizontalAlignment="Center"
+                   IsVisible="{Binding !Downloads.Count}" />
 
         <ScrollViewer>
             <ItemsControl ItemsSource="{Binding Downloads}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="svc:DownloadItem">
-                        <Border Background="#22222e" CornerRadius="6" Padding="16" Margin="0,0,0,8"
-                                BorderBrush="#2a2a3a" BorderThickness="1">
+                        <Border Background="#1a192a" CornerRadius="8" Padding="16" Margin="0,0,0,10"
+                                BorderBrush="#2a2840" BorderThickness="1">
                             <DockPanel>
-                                <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="12,0,0,0">
+                                <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" Margin="16,0,0,0">
                                     <Button Content="Cancel"
                                             Command="{Binding $parent[ItemsControl].DataContext.CancelDownloadCommand}"
                                             CommandParameter="{Binding}"
-                                            Classes="outline-btn" Padding="8,4" FontSize="12" />
+                                            Classes="outline-btn" Padding="10,5" FontSize="11" />
                                 </StackPanel>
 
-                                <StackPanel Spacing="6">
-                                    <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#e8e8ef" />
-                                    <StackPanel Orientation="Horizontal" Spacing="12">
-                                        <TextBlock Foreground="#9898a8" FontSize="12">
-                                            <Run Text="{Binding Status}" />
-                                        </TextBlock>
-                                        <TextBlock Foreground="#6c5ce7" FontSize="12">
-                                            <Run Text="{Binding ProgressPercent, StringFormat={}{0:F1}%}" />
-                                        </TextBlock>
-                                    </StackPanel>
+                                <StackPanel Spacing="8">
+                                    <!-- Name + Status -->
+                                    <DockPanel>
+                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Foreground="#e8e8ef"
+                                                   FontSize="14" TextTrimming="CharacterEllipsis" />
+                                    </DockPanel>
+
                                     <!-- Progress bar -->
-                                    <ProgressBar Minimum="0" Maximum="100"
-                                                 Value="{Binding ProgressPercent}"
-                                                 Height="4" Foreground="#6c5ce7" Background="#1a1a24" />
-                                    <TextBlock Text="{Binding Error}" Foreground="#ff6b6b" FontSize="12"
+                                    <Grid>
+                                        <ProgressBar Minimum="0" Maximum="100"
+                                                     Value="{Binding ProgressPercent}"
+                                                     Height="6" Foreground="#d4af37" Background="#100f1b"
+                                                     CornerRadius="3" />
+                                    </Grid>
+
+                                    <!-- Stats row -->
+                                    <DockPanel>
+                                        <TextBlock DockPanel.Dock="Left" Foreground="#8a8078" FontSize="12"
+                                                   Text="{Binding StatusText}" />
+                                        <TextBlock DockPanel.Dock="Right" Foreground="#d4af37" FontSize="12"
+                                                   HorizontalAlignment="Right">
+                                            <Run Text="{Binding ProgressPercent, StringFormat={}{0:F1}%}" />
+                                            <Run Text=" — " Foreground="#5c564e" />
+                                            <Run Text="{Binding ProgressText}" Foreground="#8a8078" />
+                                        </TextBlock>
+                                    </DockPanel>
+
+                                    <!-- Error -->
+                                    <TextBlock Text="{Binding Error}" Foreground="#e74c3c" FontSize="12"
+                                               TextWrapping="Wrap"
                                                IsVisible="{Binding Error, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
                                 </StackPanel>
                             </DockPanel>

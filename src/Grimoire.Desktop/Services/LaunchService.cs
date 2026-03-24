@@ -7,6 +7,7 @@ using Grimoire.Shared.Enums;
 using Grimoire.Shared.Interfaces;
 using Grimoire.Shared.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Grimoire.Desktop.Services;
 
@@ -38,21 +39,23 @@ public class LaunchService : ILaunchService
     private readonly IEmulatorManager _emulatorManager;
     private readonly IDownloadManager _downloadManager;
     private readonly ISettingsService _settings;
-    private readonly LocalDbContext _db;
+    private readonly IServiceProvider _services;
 
     public LaunchService(
         IGrimoireApi api,
         IEmulatorManager emulatorManager,
         IDownloadManager downloadManager,
         ISettingsService settings,
-        LocalDbContext db)
+        IServiceProvider services)
     {
         _api = api;
         _emulatorManager = emulatorManager;
         _downloadManager = downloadManager;
         _settings = settings;
-        _db = db;
+        _services = services;
     }
+
+    private LocalDbContext CreateDb() => _services.GetRequiredService<LocalDbContext>();
 
     public async Task LaunchGameAsync(int gameId, IProgress<LaunchProgress> progress, CancellationToken ct = default)
     {
@@ -80,8 +83,13 @@ public class LaunchService : ILaunchService
             // 3. Check if game is downloaded locally
             progress.Report(new LaunchProgress(LaunchStep.DownloadingGame, "Checking local game files..."));
             var installDir = await _settings.GetInstallDirectoryAsync();
-            var localGame = await _db.DownloadedGames
-                .FirstOrDefaultAsync(g => g.ServerGameId == gameId, ct);
+            DownloadedGame? localGame;
+            using (var db = CreateDb())
+            {
+                localGame = await db.DownloadedGames
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(g => g.ServerGameId == gameId, ct);
+            }
 
             string gamePath;
             if (localGame is not null && File.Exists(localGame.LocalPath))
@@ -99,26 +107,44 @@ public class LaunchService : ILaunchService
                 var download = await _downloadManager.EnqueueAsync(
                     game.Title, DownloadableType.Game, gameId, gamePath);
 
-                // Wait for download to complete
+                // Wait for download to complete, relaying progress
                 var tcs = new TaskCompletionSource();
                 void OnComplete(DownloadItem item)
                 {
                     if (item.Id == download.Id) tcs.TrySetResult();
                 }
+                void OnProgress(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+                {
+                    if (e.PropertyName is nameof(DownloadItem.BytesDownloaded) or nameof(DownloadItem.ProgressPercent))
+                    {
+                        progress.Report(new LaunchProgress(
+                            LaunchStep.DownloadingGame,
+                            $"Downloading {game.Title}... {download.ProgressPercent:F1}% ({download.ProgressText})",
+                            download.ProgressPercent));
+                    }
+                }
+                download.PropertyChanged += OnProgress;
                 _downloadManager.DownloadCompleted += OnComplete;
                 try { await tcs.Task.WaitAsync(ct); }
-                finally { _downloadManager.DownloadCompleted -= OnComplete; }
+                finally
+                {
+                    _downloadManager.DownloadCompleted -= OnComplete;
+                    download.PropertyChanged -= OnProgress;
+                }
 
                 // Track in local DB
-                _db.DownloadedGames.Add(new DownloadedGame
+                using (var db = CreateDb())
                 {
-                    ServerGameId = gameId,
-                    Title = game.Title,
-                    Platform = game.Platform,
-                    LocalPath = gamePath,
-                    FileSize = game.FileSize
-                });
-                await _db.SaveChangesAsync(ct);
+                    db.DownloadedGames.Add(new DownloadedGame
+                    {
+                        ServerGameId = gameId,
+                        Title = game.Title,
+                        Platform = game.Platform,
+                        LocalPath = gamePath,
+                        FileSize = game.FileSize
+                    });
+                    await db.SaveChangesAsync(ct);
+                }
             }
 
             // 4. Validate requirements — auto-download if missing
@@ -186,13 +212,14 @@ public class LaunchService : ILaunchService
         var emulatorPath = await handler.FindInstalledPathAsync(ct);
         if (emulatorPath is not null)
         {
-            _db.InstalledEmulators.Add(new InstalledEmulator
+            using var db = CreateDb();
+            db.InstalledEmulators.Add(new InstalledEmulator
             {
                 Name = handler.EmulatorName,
                 Platform = platform,
                 InstallPath = emulatorPath,
             });
-            await _db.SaveChangesAsync(ct);
+            await db.SaveChangesAsync(ct);
         }
 
         return emulatorPath

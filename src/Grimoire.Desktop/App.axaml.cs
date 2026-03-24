@@ -40,13 +40,31 @@ public class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var mainVm = Services.GetRequiredService<MainWindowViewModel>();
             desktop.MainWindow = new MainWindow
             {
-                DataContext = Services.GetRequiredService<MainWindowViewModel>()
+                DataContext = mainVm
             };
 
             // Global unhandled exception handler
             desktop.MainWindow.Closing += (_, _) => Log.CloseAndFlush();
+
+            // Handle protocol activation (grimoire://launch/{gameId})
+            if (Program.ProtocolActivationUri is not null)
+            {
+                var protocolHandler = Services.GetRequiredService<IProtocolHandler>();
+                var gameId = protocolHandler.ParseLaunchGameId(Program.ProtocolActivationUri);
+                if (gameId.HasValue)
+                {
+                    desktop.MainWindow.Opened += async (_, _) =>
+                    {
+                        await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                        {
+                            await mainVm.LaunchFromProtocolAsync(gameId.Value);
+                        });
+                    };
+                }
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
@@ -78,10 +96,11 @@ public class App : Application
         Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
 
         services.AddDbContext<LocalDbContext>(options =>
-            options.UseSqlite($"Data Source={dbPath}"));
+            options.UseSqlite($"Data Source={dbPath}"),
+            ServiceLifetime.Transient);
 
         // Settings
-        services.AddScoped<ISettingsService, SettingsService>();
+        services.AddSingleton<ISettingsService, SettingsService>();
 
         // API Client with resilience policies
         services.AddHttpClient<IGrimoireApi, GrimoireApiClient>(client =>
@@ -112,12 +131,12 @@ public class App : Application
         services.AddSingleton<IProtocolHandler, ProtocolHandler>();
         services.AddSingleton<IEmulatorManager, EmulatorManager>();
         services.AddSingleton<IDownloadManager, DownloadManager>();
-        services.AddScoped<ILaunchService, LaunchService>();
+        services.AddTransient<ILaunchService, LaunchService>();
 
-        // ViewModels
-        services.AddTransient<MainWindowViewModel>();
-        services.AddTransient<GameLibraryViewModel>();
-        services.AddTransient<DownloadsViewModel>();
-        services.AddTransient<SettingsViewModel>();
+        // ViewModels — singletons so protocol activation can reach the same instance
+        services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<GameLibraryViewModel>();
+        services.AddSingleton<DownloadsViewModel>();
+        services.AddSingleton<SettingsViewModel>();
     }
 }

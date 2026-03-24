@@ -1,5 +1,7 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Grimoire.Shared.DTOs;
 using Grimoire.Shared.Enums;
@@ -7,19 +9,83 @@ using Grimoire.Shared.Interfaces;
 
 namespace Grimoire.Desktop.Services;
 
-public record DownloadItem(
-    string Id,
-    string Name,
-    DownloadableType Type,
-    int ServerId,
-    string DestinationPath
-)
+public class DownloadItem : INotifyPropertyChanged
 {
-    public long BytesDownloaded { get; set; }
-    public long TotalBytes { get; set; }
-    public DownloadStatus Status { get; set; } = DownloadStatus.Queued;
+    public string Id { get; }
+    public string Name { get; }
+    public DownloadableType Type { get; }
+    public int ServerId { get; }
+    public string DestinationPath { get; }
+
+    private long _bytesDownloaded;
+    public long BytesDownloaded
+    {
+        get => _bytesDownloaded;
+        set { _bytesDownloaded = value; OnPropertyChanged(); OnPropertyChanged(nameof(ProgressPercent)); OnPropertyChanged(nameof(ProgressText)); }
+    }
+
+    private long _totalBytes;
+    public long TotalBytes
+    {
+        get => _totalBytes;
+        set { _totalBytes = value; OnPropertyChanged(); OnPropertyChanged(nameof(ProgressPercent)); OnPropertyChanged(nameof(ProgressText)); }
+    }
+
+    private DownloadStatus _status = DownloadStatus.Queued;
+    public DownloadStatus Status
+    {
+        get => _status;
+        set { _status = value; OnPropertyChanged(); OnPropertyChanged(nameof(StatusText)); }
+    }
+
+    private string? _error;
+    public string? Error
+    {
+        get => _error;
+        set { _error = value; OnPropertyChanged(); }
+    }
+
     public double ProgressPercent => TotalBytes > 0 ? (double)BytesDownloaded / TotalBytes * 100.0 : 0.0;
-    public string? Error { get; set; }
+
+    public string ProgressText
+    {
+        get
+        {
+            if (TotalBytes <= 0) return "";
+            return $"{FormatBytes(BytesDownloaded)} / {FormatBytes(TotalBytes)}";
+        }
+    }
+
+    public string StatusText => Status switch
+    {
+        DownloadStatus.Queued => "Queued",
+        DownloadStatus.Downloading => "Downloading...",
+        DownloadStatus.Paused => "Paused",
+        DownloadStatus.Completed => "Complete",
+        DownloadStatus.Failed => "Failed",
+        _ => Status.ToString()
+    };
+
+    public DownloadItem(string id, string name, DownloadableType type, int serverId, string destinationPath)
+    {
+        Id = id;
+        Name = name;
+        Type = type;
+        ServerId = serverId;
+        DestinationPath = destinationPath;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+    private void OnPropertyChanged([CallerMemberName] string? name = null)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+
+    private static string FormatBytes(long bytes) => bytes switch
+    {
+        >= 1_000_000_000 => $"{bytes / 1_000_000_000.0:F1} GB",
+        >= 1_000_000 => $"{bytes / 1_000_000.0:F1} MB",
+        >= 1_000 => $"{bytes / 1_000.0:F1} KB",
+        _ => $"{bytes} B"
+    };
 }
 
 public interface IDownloadManager

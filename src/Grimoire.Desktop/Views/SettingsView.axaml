@@ -4,29 +4,37 @@
              x:Class="Grimoire.Desktop.Views.SettingsView"
              x:DataType="vm:SettingsViewModel">
 
-    <StackPanel Spacing="20" MaxWidth="600">
-        <TextBlock Text="Settings" FontSize="24" FontWeight="Bold" Foreground="#e8e8ef" />
+    <StackPanel Spacing="24" MaxWidth="600">
+        <TextBlock Text="Settings" FontSize="26" FontWeight="Bold" Foreground="#d4af37"
+                   FontFamily="Palatino Linotype, Georgia, serif" LetterSpacing="1" />
 
-        <StackPanel Spacing="12">
-            <StackPanel Spacing="4">
-                <TextBlock Text="Server URL" Foreground="#9898a8" FontSize="13" />
-                <TextBox Text="{Binding ServerUrl}" Classes="search-input" />
+        <Border Background="#1a192a" CornerRadius="8" Padding="20"
+                BorderBrush="#2a2840" BorderThickness="1">
+            <StackPanel Spacing="16">
+                <StackPanel Spacing="4">
+                    <TextBlock Text="SERVER URL" Foreground="#5c564e" FontSize="11"
+                               FontFamily="Palatino Linotype, Georgia, serif" LetterSpacing="2" />
+                    <TextBox Text="{Binding ServerUrl}" Classes="search-input" />
+                </StackPanel>
+
+                <StackPanel Spacing="4">
+                    <TextBlock Text="INSTALL DIRECTORY" Foreground="#5c564e" FontSize="11"
+                               FontFamily="Palatino Linotype, Georgia, serif" LetterSpacing="2" />
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Content="Browse..."
+                                Command="{Binding BrowseInstallDirectoryCommand}"
+                                Classes="outline-btn" Margin="8,0,0,0" VerticalAlignment="Center"
+                                FontSize="12" Padding="12,6" />
+                        <TextBox Text="{Binding InstallDirectory}" Classes="search-input" />
+                    </DockPanel>
+                </StackPanel>
+
+                <Button Content="Save" Command="{Binding SaveSettingsCommand}" Classes="accent-btn"
+                        HorizontalAlignment="Left" Padding="24,8" />
+
+                <TextBlock Text="{Binding StatusMessage}" Foreground="#4a9e6e" FontStyle="Italic"
+                           IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
             </StackPanel>
-
-            <StackPanel Spacing="4">
-                <TextBlock Text="Install Directory" Foreground="#9898a8" FontSize="13" />
-                <DockPanel>
-                    <Button DockPanel.Dock="Right" Content="Browse..."
-                            Command="{Binding BrowseInstallDirectoryCommand}"
-                            Classes="outline-btn" Margin="8,0,0,0" VerticalAlignment="Center" />
-                    <TextBox Text="{Binding InstallDirectory}" Classes="search-input" />
-                </DockPanel>
-            </StackPanel>
-
-            <Button Content="Save Settings" Command="{Binding SaveSettingsCommand}" Classes="accent-btn" />
-
-            <TextBlock Text="{Binding StatusMessage}" Foreground="#2ecc71"
-                       IsVisible="{Binding StatusMessage, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
-        </StackPanel>
+        </Border>
     </StackPanel>
 </UserControl>

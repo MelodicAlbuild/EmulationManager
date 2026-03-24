@@ -52,4 +52,10 @@ public partial class MainWindowViewModel : ViewModelBase
     {
         await _libraryVm.LoadGamesCommand.ExecuteAsync(null);
     }
+
+    public async Task LaunchFromProtocolAsync(int gameId)
+    {
+        NavigateToLibrary();
+        await _libraryVm.LaunchGameByIdAsync(gameId);
+    }
 }

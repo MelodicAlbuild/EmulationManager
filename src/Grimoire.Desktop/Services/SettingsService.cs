@@ -1,5 +1,6 @@
 using Grimoire.Desktop.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Grimoire.Desktop.Services;
 
@@ -15,34 +16,36 @@ public interface ISettingsService
 
 public class SettingsService : ISettingsService
 {
-    private readonly LocalDbContext _db;
+    private readonly IServiceProvider _services;
 
     public const string ServerUrlKey = "ServerUrl";
     public const string InstallDirectoryKey = "InstallDirectory";
 
-    public SettingsService(LocalDbContext db)
+    public SettingsService(IServiceProvider services)
     {
-        _db = db;
+        _services = services;
     }
 
     public async Task<string?> GetAsync(string key)
     {
-        var setting = await _db.Settings.FindAsync(key);
+        using var db = _services.GetRequiredService<LocalDbContext>();
+        var setting = await db.Settings.AsNoTracking().FirstOrDefaultAsync(s => s.Key == key);
         return setting?.Value;
     }
 
     public async Task SetAsync(string key, string value)
     {
-        var setting = await _db.Settings.FindAsync(key);
+        using var db = _services.GetRequiredService<LocalDbContext>();
+        var setting = await db.Settings.FindAsync(key);
         if (setting is not null)
         {
             setting.Value = value;
         }
         else
         {
-            _db.Settings.Add(new AppSetting { Key = key, Value = value });
+            db.Settings.Add(new AppSetting { Key = key, Value = value });
         }
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
     }
 
     public async Task<string> GetServerUrlAsync()
@@ -60,7 +63,6 @@ public class SettingsService : ISettingsService
         var dir = await GetAsync(InstallDirectoryKey);
         if (dir is not null) return dir;
 
-        // Default install directory
         var appData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         return Path.Combine(appData, "Grimoire");
     }

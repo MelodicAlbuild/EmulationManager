@@ -14,7 +14,12 @@ public class RyubingHandler : IEmulatorHandler
 
     public Task<string?> FindInstalledPathAsync(CancellationToken ct = default)
     {
-        // Search common installation paths per OS
+        // Check Grimoire-managed install directory first
+        var grimoirePath = GrimoirePaths.FindEmulatorExecutable("Ryubing", "Ryujinx.exe");
+        if (grimoirePath is not null)
+            return Task.FromResult<string?>(grimoirePath);
+
+        // Fall back to common system installation paths
         var candidates = GetSearchPaths();
         foreach (var path in candidates)
         {

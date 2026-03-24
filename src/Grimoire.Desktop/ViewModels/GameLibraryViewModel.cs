@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Grimoire.Desktop.Services;
 using Grimoire.Shared.DTOs;
 using Grimoire.Shared.Enums;
 using Grimoire.Shared.Interfaces;
@@ -10,6 +11,7 @@ namespace Grimoire.Desktop.ViewModels;
 public partial class GameLibraryViewModel : ViewModelBase
 {
     private readonly IGrimoireApi _api;
+    private readonly ILaunchService _launchService;
 
     [ObservableProperty]
     private ObservableCollection<GameListDto> _games = [];
@@ -35,9 +37,22 @@ public partial class GameLibraryViewModel : ViewModelBase
     [ObservableProperty]
     private bool _showDetail;
 
-    public GameLibraryViewModel(IGrimoireApi api)
+    [ObservableProperty]
+    private bool _isLaunching;
+
+    [ObservableProperty]
+    private string? _launchStatus;
+
+    [ObservableProperty]
+    private double _launchProgress;
+
+    [ObservableProperty]
+    private bool _showLaunchProgress;
+
+    public GameLibraryViewModel(IGrimoireApi api, ILaunchService launchService)
     {
         _api = api;
+        _launchService = launchService;
     }
 
     [RelayCommand]
@@ -74,6 +89,7 @@ public partial class GameLibraryViewModel : ViewModelBase
         {
             GameDetail = await _api.GetGameDetailAsync(game.Id);
             ShowDetail = true;
+            LaunchStatus = null;
         }
         catch (Exception ex)
         {
@@ -86,6 +102,89 @@ public partial class GameLibraryViewModel : ViewModelBase
     {
         ShowDetail = false;
         GameDetail = null;
+        LaunchStatus = null;
+    }
+
+    [RelayCommand]
+    private async Task LaunchGame()
+    {
+        if (GameDetail is null) return;
+
+        try
+        {
+            IsLaunching = true;
+            ShowLaunchProgress = true;
+            LaunchProgress = 0;
+            LaunchStatus = "Preparing...";
+
+            var stepWeights = new Dictionary<LaunchStep, double>
+            {
+                [LaunchStep.ResolvingGame] = 5,
+                [LaunchStep.CheckingEmulator] = 10,
+                [LaunchStep.DownloadingEmulator] = 30,
+                [LaunchStep.InstallingEmulator] = 40,
+                [LaunchStep.DownloadingGame] = 60,
+                [LaunchStep.ValidatingRequirements] = 75,
+                [LaunchStep.Launching] = 90,
+                [LaunchStep.Complete] = 100,
+            };
+
+            var progress = new Progress<LaunchProgress>(p =>
+            {
+                LaunchStatus = p.Message;
+
+                // Use actual download percentage when available, otherwise use step weights
+                if (p.ProgressPercent.HasValue && p.Step is LaunchStep.DownloadingGame or LaunchStep.DownloadingEmulator)
+                    LaunchProgress = p.ProgressPercent.Value;
+                else if (stepWeights.TryGetValue(p.Step, out var weight))
+                    LaunchProgress = weight;
+
+                if (p.Step == LaunchStep.Complete)
+                    ShowLaunchProgress = false;
+            });
+
+            await _launchService.LaunchGameAsync(GameDetail.Id, progress);
+        }
+        catch (Exception ex)
+        {
+            LaunchStatus = $"Failed: {ex.Message}";
+            ShowLaunchProgress = false;
+        }
+        finally
+        {
+            IsLaunching = false;
+        }
+    }
+
+    /// <summary>
+    /// Called from protocol activation (grimoire://launch/{gameId})
+    /// </summary>
+    public async Task LaunchGameByIdAsync(int gameId)
+    {
+        try
+        {
+            IsLaunching = true;
+            LaunchStatus = "Launching from protocol...";
+
+            var progress = new Progress<LaunchProgress>(p =>
+            {
+                LaunchStatus = p.Message;
+            });
+
+            // Show the game detail while launching
+            GameDetail = await _api.GetGameDetailAsync(gameId);
+            ShowDetail = true;
+
+            await _launchService.LaunchGameAsync(gameId, progress);
+        }
+        catch (Exception ex)
+        {
+            LaunchStatus = $"Failed: {ex.Message}";
+        }
+        finally
+        {
+            IsLaunching = false;
+        }
     }
 
     [RelayCommand]

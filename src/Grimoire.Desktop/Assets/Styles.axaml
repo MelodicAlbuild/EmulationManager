@@ -1,80 +1,111 @@
 <Styles xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-    <!-- Nav Button -->
+    <!-- ═══ Global Font Override ═══ -->
+    <Style Selector="TextBlock">
+        <Setter Property="FontFamily" Value="Georgia, Palatino Linotype, serif" />
+    </Style>
+
+    <!-- ═══ Nav Button ═══ -->
     <Style Selector="Button.nav-btn">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="#9898a8" />
+        <Setter Property="Foreground" Value="#8a8078" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
         <Setter Property="HorizontalContentAlignment" Value="Left" />
         <Setter Property="Padding" Value="16,10" />
-        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="CornerRadius" Value="4" />
         <Setter Property="FontSize" Value="14" />
+        <Setter Property="BorderThickness" Value="2,0,0,0" />
+        <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
     <Style Selector="Button.nav-btn:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#22222e" />
-        <Setter Property="Foreground" Value="#e8e8ef" />
+        <Setter Property="Background" Value="#141320" />
+        <Setter Property="Foreground" Value="#d8d0c4" />
     </Style>
     <Style Selector="Button.nav-btn.active /template/ ContentPresenter">
-        <Setter Property="Background" Value="#6c5ce7" />
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Foreground" Value="#d4af37" />
+        <Setter Property="BorderBrush" Value="#d4af37" />
     </Style>
 
-    <!-- Accent Button -->
+    <!-- ═══ Accent Button (Gold) ═══ -->
     <Style Selector="Button.accent-btn">
-        <Setter Property="Background" Value="#6c5ce7" />
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="#a68a2a" />
+        <Setter Property="Foreground" Value="#0a0a0f" />
         <Setter Property="Padding" Value="16,8" />
-        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="CornerRadius" Value="4" />
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
     <Style Selector="Button.accent-btn:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#7d6ff0" />
+        <Setter Property="Background" Value="#d4af37" />
+        <Setter Property="Foreground" Value="#0a0a0f" />
     </Style>
 
-    <!-- Outline Button -->
+    <!-- ═══ Play Button (Crimson + Gold) ═══ -->
+    <Style Selector="Button.play-btn">
+        <Setter Property="Background" Value="#4a1a2e" />
+        <Setter Property="Foreground" Value="#f0d060" />
+        <Setter Property="Padding" Value="24,12" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="BorderBrush" Value="#d4af3750" />
+        <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style Selector="Button.play-btn:pointerover /template/ ContentPresenter">
+        <Setter Property="Background" Value="#7b2040" />
+        <Setter Property="BorderBrush" Value="#d4af37" />
+    </Style>
+
+    <!-- ═══ Outline Button ═══ -->
     <Style Selector="Button.outline-btn">
         <Setter Property="Background" Value="Transparent" />
-        <Setter Property="Foreground" Value="#6c5ce7" />
-        <Setter Property="BorderBrush" Value="#6c5ce7" />
+        <Setter Property="Foreground" Value="#d4af37" />
+        <Setter Property="BorderBrush" Value="#d4af3740" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="16,8" />
-        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="CornerRadius" Value="4" />
     </Style>
     <Style Selector="Button.outline-btn:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#6c5ce7" />
-        <Setter Property="Foreground" Value="White" />
+        <Setter Property="Background" Value="#d4af3715" />
+        <Setter Property="BorderBrush" Value="#d4af37" />
+        <Setter Property="Foreground" Value="#f0d060" />
     </Style>
 
-    <!-- Filter Button -->
+    <!-- ═══ Filter Button ═══ -->
     <Style Selector="Button.filter-btn">
-        <Setter Property="Background" Value="#22222e" />
-        <Setter Property="Foreground" Value="#9898a8" />
+        <Setter Property="Background" Value="#1a192a" />
+        <Setter Property="Foreground" Value="#8a8078" />
         <Setter Property="Padding" Value="12,6" />
-        <Setter Property="CornerRadius" Value="6" />
-        <Setter Property="BorderBrush" Value="#2a2a3a" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="BorderBrush" Value="#2a2840" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="12" />
     </Style>
     <Style Selector="Button.filter-btn:pointerover /template/ ContentPresenter">
-        <Setter Property="Background" Value="#2a2a3a" />
-        <Setter Property="Foreground" Value="#e8e8ef" />
+        <Setter Property="Background" Value="#211f36" />
+        <Setter Property="Foreground" Value="#d8d0c4" />
+        <Setter Property="BorderBrush" Value="#d4af3740" />
     </Style>
 
-    <!-- Search Input -->
+    <!-- ═══ Search / Text Input ═══ -->
     <Style Selector="TextBox.search-input">
-        <Setter Property="Background" Value="#22222e" />
-        <Setter Property="Foreground" Value="#e8e8ef" />
-        <Setter Property="BorderBrush" Value="#2a2a3a" />
-        <Setter Property="CornerRadius" Value="6" />
+        <Setter Property="Background" Value="#100f1b" />
+        <Setter Property="Foreground" Value="#d8d0c4" />
+        <Setter Property="BorderBrush" Value="#2a2840" />
+        <Setter Property="CornerRadius" Value="4" />
         <Setter Property="Padding" Value="10,8" />
         <Setter Property="FontSize" Value="14" />
     </Style>
     <Style Selector="TextBox.search-input:focus">
-        <Setter Property="BorderBrush" Value="#6c5ce7" />
+        <Setter Property="BorderBrush" Value="#a68a2a" />
+    </Style>
+    <Style Selector="TextBox.search-input /template/ TextBlock#PART_Watermark">
+        <Setter Property="Foreground" Value="#5c564e" />
+        <Setter Property="FontStyle" Value="Italic" />
     </Style>
 
-    <!-- Game Card Button -->
+    <!-- ═══ Game Card Button ═══ -->
     <Style Selector="Button.game-card-btn">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Padding" Value="0" />
@@ -83,5 +114,10 @@
     </Style>
     <Style Selector="Button.game-card-btn:pointerover /template/ ContentPresenter">
         <Setter Property="Background" Value="Transparent" />
+    </Style>
+
+    <!-- ═══ ProgressBar Override ═══ -->
+    <Style Selector="ProgressBar">
+        <Setter Property="CornerRadius" Value="3" />
     </Style>
 </Styles>

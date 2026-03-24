@@ -94,7 +94,7 @@ public class RyubingHandler : IEmulatorHandler
         var baseDir = Path.GetDirectoryName(emulatorPath)!;
         var fwDir = Path.Combine(baseDir, "bis", "system", "Contents", "registered");
         Directory.CreateDirectory(fwDir);
-        // Firmware comes as a zip — extract it
+        // Firmware comes as a zip ï¿½ extract it
         if (firmwarePath.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
             System.IO.Compression.ZipFile.ExtractToDirectory(firmwarePath, fwDir, overwriteFiles: true);
         else
@@ -118,11 +118,18 @@ public class RyubingHandler : IEmulatorHandler
     public Task ValidateRequirementsAsync(string emulatorPath, CancellationToken ct = default)
     {
         var baseDir = Path.GetDirectoryName(emulatorPath)!;
-        var keysPath = Path.Combine(baseDir, "system", "prod.keys");
-        if (!File.Exists(keysPath))
+        var systemDir = Path.Combine(baseDir, "system");
+
+        var missing = new List<string>();
+        if (!File.Exists(Path.Combine(systemDir, "prod.keys")))
+            missing.Add("prod.keys");
+        if (!File.Exists(Path.Combine(systemDir, "title.keys")))
+            missing.Add("title.keys");
+
+        if (missing.Count > 0)
         {
             throw new FileNotFoundException(
-                "prod.keys not found. Switch games require production keys to run.", keysPath);
+                $"Missing key files: {string.Join(", ", missing)}. Switch games require prod.keys and title.keys to run.");
         }
         return Task.CompletedTask;
     }
